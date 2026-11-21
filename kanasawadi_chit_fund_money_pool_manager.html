@@ -1,0 +1,1793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kanasawadi Chit Fund — Money Pool Manager</title>
+<style>
+  :root {
+    --bg: #f3f6fb;
+    --surface: #ffffff;
+    --surface-alt: #f8fafc;
+    --navy: #0f2342;
+    --navy-light: #1e3a5f;
+    --primary: #1d4ed8;
+    --primary-hover: #1e40af;
+    --text: #0f172a;
+    --muted: #64748b;
+    --border: #e2e8f0;
+    --success: #047857;
+    --success-bg: #ecfdf5;
+    --warn: #b45309;
+    --warn-bg: #fffbeb;
+    --danger: #dc2626;
+    --danger-bg: #fef2f2;
+    --hist-bg: #fef3c7;
+    --hist-text: #92400e;
+    --curr-bg: #dbeafe;
+    --curr-text: #1e40af;
+    --radius: 12px;
+    --shadow: 0 2px 10px rgba(15, 35, 66, 0.06);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+  }
+  header {
+    background: linear-gradient(135deg, var(--navy), var(--navy-light));
+    color: #fff;
+    padding: 20px 18px;
+  }
+  .header-inner {
+    max-width: 1160px;
+    margin: 0 auto;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  header h1 { margin: 0; font-size: 22px; font-weight: 700; }
+  header p { margin: 4px 0 0; color: #cbd5e1; font-size: 13px; }
+  .header-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .nav-bar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+  }
+  .nav-inner {
+    max-width: 1160px;
+    margin: 0 auto;
+    display: flex;
+    overflow-x: auto;
+    gap: 6px;
+    padding: 10px 16px;
+    scrollbar-width: none;
+  }
+  .nav-inner::-webkit-scrollbar { display: none; }
+  .tab-btn {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid transparent;
+    padding: 9px 14px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    margin: 0;
+    transition: all 0.15s ease;
+  }
+  .tab-btn:hover { background: var(--surface-alt); color: var(--text); opacity: 1; }
+  .tab-btn.active {
+    background: var(--primary);
+    color: #fff;
+  }
+  main {
+    max-width: 1160px;
+    margin: 0 auto;
+    padding: 18px 16px 40px;
+  }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+  .card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 16px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+  }
+  .card small {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    display: block;
+  }
+  .card h2 {
+    margin: 8px 0 4px;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .card .sub {
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .card.highlight { border-left: 4px solid var(--success); }
+  .card.warn-card { border-left: 4px solid var(--warn); }
+  .card.info-card { border-left: 4px solid var(--primary); }
+
+  section {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 18px;
+    margin-top: 16px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+  }
+  section h2 {
+    margin: 0 0 6px;
+    font-size: 18px;
+    font-weight: 700;
+  }
+  section h3 {
+    margin: 16px 0 8px;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--navy);
+  }
+  .section-desc {
+    margin: 0 0 14px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 10px;
+    align-items: end;
+  }
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .field label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+  }
+  input, select, button {
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    font-size: 14px;
+    font-family: inherit;
+    min-height: 42px;
+  }
+  input:focus, select:focus {
+    outline: 2px solid rgba(29, 78, 216, 0.25);
+    border-color: var(--primary);
+  }
+  button {
+    background: var(--primary);
+    color: #fff;
+    border: 0;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.15s ease;
+  }
+  button:hover { background: var(--primary-hover); }
+  button.secondary { background: #475569; }
+  button.secondary:hover { background: #334155; }
+  button.outline {
+    background: transparent;
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.4);
+    padding: 7px 12px;
+    min-height: 36px;
+    font-size: 13px;
+  }
+  button.outline:hover { background: rgba(255,255,255,0.12); }
+  button.outline-dark {
+    background: #fff;
+    color: var(--text);
+    border: 1px solid #cbd5e1;
+  }
+  button.outline-dark:hover { background: var(--surface-alt); }
+  button.danger { background: var(--danger); }
+  button.danger:hover { background: #b91c1c; }
+  button.btn-sm {
+    padding: 5px 10px;
+    min-height: 30px;
+    font-size: 12px;
+    border-radius: 6px;
+  }
+
+  .notice {
+    padding: 12px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin: 10px 0;
+  }
+  .notice.warn { background: var(--warn-bg); color: #78350f; border: 1px solid #fde68a; }
+  .notice.info { background: #eff6ff; color: #1e3a8a; border: 1px solid #bfdbfe; }
+  .notice.success { background: var(--success-bg); color: #065f46; border: 1px solid #a7f3d0; }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+  .badge.hist { background: var(--hist-bg); color: var(--hist-text); }
+  .badge.curr { background: var(--curr-bg); color: var(--curr-text); }
+  .badge.paid { background: var(--success-bg); color: var(--success); }
+  .badge.open { background: var(--danger-bg); color: var(--danger); }
+
+  .tablewrap { overflow-x: auto; margin-top: 10px; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td {
+    text-align: left;
+    padding: 10px 8px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    white-space: nowrap;
+  }
+  th {
+    background: var(--surface-alt);
+    font-weight: 700;
+    color: var(--muted);
+    font-size: 12px;
+    text-transform: uppercase;
+  }
+  td.num, th.num { text-align: right; }
+  .actions-cell { display: flex; gap: 6px; }
+
+  .filter-bar {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+    gap: 8px;
+    background: var(--surface-alt);
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    margin-bottom: 12px;
+    align-items: end;
+  }
+
+  .subtabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .subtab-btn {
+    background: var(--surface-alt);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    min-height: 38px;
+  }
+  .subtab-btn.active {
+    background: var(--navy);
+    color: #fff;
+    border-color: var(--navy);
+  }
+  .subpanel { display: none; }
+  .subpanel.active { display: block; }
+
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.55);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    z-index: 100;
+  }
+  .modal-backdrop.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border-radius: 14px;
+    max-width: 480px;
+    width: 100%;
+    padding: 20px;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.2);
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .modal h3 { margin: 0 0 12px; font-size: 18px; }
+  .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 16px;
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: var(--navy);
+    color: #fff;
+    padding: 12px 18px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+    z-index: 200;
+    display: none;
+    max-width: 340px;
+  }
+  .toast.error { background: var(--danger); }
+  .toast.success { background: var(--success); }
+
+  footer {
+    max-width: 1160px;
+    margin: 24px auto 0;
+    padding: 16px;
+    color: var(--muted);
+    font-size: 12px;
+    text-align: center;
+    border-top: 1px solid var(--border);
+  }
+
+  @media (max-width: 640px) {
+    header h1 { font-size: 19px; }
+    .card h2 { font-size: 19px; }
+    section { padding: 14px; }
+    .toast { left: 16px; right: 16px; bottom: 14px; max-width: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div>
+      <h1>Kanasawadi Chit Fund</h1>
+      <p>16-Member Pooled Money Manager • Contributions, Loans &amp; Historical Records</p>
+    </div>
+    <div class="header-actions">
+      <button class="outline" type="button" onclick="downloadBackup()">Download Backup (JSON)</button>
+      <button class="outline" type="button" onclick="triggerRestore()">Restore Backup</button>
+      <input type="file" id="restoreFileInput" accept=".json,application/json" style="display:none" onchange="handleRestoreFile(event)">
+    </div>
+  </div>
+</header>
+
+<nav class="nav-bar" aria-label="Main navigation">
+  <div class="nav-inner">
+    <button class="tab-btn active" type="button" data-tab="dashboard" onclick="switchTab('dashboard')">Dashboard</button>
+    <button class="tab-btn" type="button" data-tab="current" onclick="switchTab('current')">Record Current</button>
+    <button class="tab-btn" type="button" data-tab="previous" onclick="switchTab('previous')">Previous Records / Opening Balance</button>
+    <button class="tab-btn" type="button" data-tab="loans" onclick="switchTab('loans')">Loans &amp; Members</button>
+    <button class="tab-btn" type="button" data-tab="transactions" onclick="switchTab('transactions')">Transactions &amp; Export</button>
+  </div>
+</nav>
+
+<main>
+  <!-- TAB 1: DASHBOARD -->
+  <div id="tab-dashboard" class="tab-panel active">
+    <div class="cards">
+      <div class="card info-card">
+        <small>Total Contributions</small>
+        <h2 id="dashTotalContrib">₹0</h2>
+        <div class="sub" id="dashContribSplit">Prev: ₹0 • Curr: ₹0</div>
+      </div>
+      <div class="card">
+        <small>Total Loans Issued</small>
+        <h2 id="dashTotalLoans">₹0</h2>
+        <div class="sub" id="dashLoansSplit">Prev: ₹0 • Curr: ₹0</div>
+      </div>
+      <div class="card">
+        <small>Total Principal Repaid</small>
+        <h2 id="dashTotalPrincipalRepaid">₹0</h2>
+        <div class="sub" id="dashRepaidSplit">Prev: ₹0 • Curr: ₹0</div>
+      </div>
+      <div class="card">
+        <small>Total Interest Collected</small>
+        <h2 id="dashTotalInterest">₹0</h2>
+        <div class="sub" id="dashInterestSplit">Prev: ₹0 • Curr: ₹0</div>
+      </div>
+      <div class="card warn-card">
+        <small>Outstanding Principal</small>
+        <h2 id="dashOutstanding">₹0</h2>
+        <div class="sub" id="dashActiveLoansCount">0 active loans</div>
+      </div>
+      <div class="card highlight">
+        <small>Available Cash Balance</small>
+        <h2 id="dashAvailable">₹0</h2>
+        <div class="sub">Contrib + Interest − Outstanding</div>
+      </div>
+    </div>
+
+    <section>
+      <h2>Member-Wise Financial Summary</h2>
+      <p class="section-desc">Combined totals across previous years and current transactions for all 16 members.</p>
+      <div class="tablewrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Member Name</th>
+              <th class="num">Prev. Contrib</th>
+              <th class="num">Curr. Contrib</th>
+              <th class="num">Total Contrib</th>
+              <th class="num">Loans Taken</th>
+              <th class="num">Principal Repaid</th>
+              <th class="num">Outstanding</th>
+              <th class="num">Interest Paid</th>
+            </tr>
+          </thead>
+          <tbody id="memberSummaryTable"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <!-- TAB 2: RECORD CURRENT -->
+  <div id="tab-current" class="tab-panel">
+    <section>
+      <h2>Record Current Contribution</h2>
+      <p class="section-desc">Standard monthly contribution (₹1,000 per member). Marked as <span class="badge curr">Current</span>.</p>
+      <div class="form-grid">
+        <div class="field">
+          <label for="conMember">Member Name</label>
+          <select id="conMember"></select>
+        </div>
+        <div class="field">
+          <label for="conAmount">Amount (₹)</label>
+          <input id="conAmount" type="number" min="1" value="1000">
+        </div>
+        <div class="field">
+          <label for="conMonth">Month</label>
+          <select id="conMonth"></select>
+        </div>
+        <div class="field">
+          <label for="conYear">Year</label>
+          <input id="conYear" type="number" min="2000" max="2100">
+        </div>
+        <div class="field">
+          <label for="conDate">Date</label>
+          <input id="conDate" type="date">
+        </div>
+        <div class="field">
+          <button type="button" onclick="addContribution(false)">Record Contribution</button>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Record Current Loan</h2>
+      <p class="section-desc">Issue a new loan from available cash. Marked as <span class="badge curr">Current</span>.</p>
+      <div class="form-grid">
+        <div class="field">
+          <label for="loanMember">Member Name</label>
+          <select id="loanMember"></select>
+        </div>
+        <div class="field">
+          <label for="loanAmount">Loan Amount (₹)</label>
+          <input id="loanAmount" type="number" min="1" placeholder="e.g. 10000">
+        </div>
+        <div class="field">
+          <label for="loanRate">Monthly Interest (%)</label>
+          <input id="loanRate" type="number" min="0" step="0.1" value="2">
+        </div>
+        <div class="field">
+          <label for="loanDate">Loan Date</label>
+          <input id="loanDate" type="date">
+        </div>
+        <div class="field">
+          <label for="loanNote">Note (Optional)</label>
+          <input id="loanNote" type="text" placeholder="Optional note">
+        </div>
+        <div class="field">
+          <button type="button" onclick="addLoan(false)">Record Loan</button>
+        </div>
+      </div>
+      <div class="notice info">Interest is recorded as entered when repayments are logged. Confirm your group's interest rules before finalizing records.</div>
+    </section>
+
+    <section>
+      <h2>Record Current Repayment</h2>
+      <p class="section-desc">Log principal and/or interest repaid against any open loan (current or historical).</p>
+      <div class="form-grid">
+        <div class="field">
+          <label for="repayLoan">Select Open Loan</label>
+          <select id="repayLoan"></select>
+        </div>
+        <div class="field">
+          <label for="repayPrincipal">Principal Repaid (₹)</label>
+          <input id="repayPrincipal" type="number" min="0" value="0">
+        </div>
+        <div class="field">
+          <label for="repayInterest">Interest Paid (₹)</label>
+          <input id="repayInterest" type="number" min="0" value="0">
+        </div>
+        <div class="field">
+          <label for="repayDate">Repayment Date</label>
+          <input id="repayDate" type="date">
+        </div>
+        <div class="field">
+          <button type="button" onclick="addRepayment(false)">Record Repayment</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- TAB 3: PREVIOUS RECORDS / OPENING BALANCE -->
+  <div id="tab-previous" class="tab-panel">
+    <section>
+      <h2>Historical Balance Summary (Previous Years)</h2>
+      <p class="section-desc">Automatically calculated from your Previous Contributions, Previous Loans, Previous Repayments, and any Optional Lump-Sum Opening Adjustment below.</p>
+      <div class="cards" style="margin-bottom: 0;">
+        <div class="card">
+          <small>Prev. Contributions</small>
+          <h2 id="histContribTotal">₹0</h2>
+        </div>
+        <div class="card">
+          <small>Prev. Loans Issued</small>
+          <h2 id="histLoansIssued">₹0</h2>
+        </div>
+        <div class="card">
+          <small>Prev. Principal Repaid</small>
+          <h2 id="histPrincipalRepaid">₹0</h2>
+        </div>
+        <div class="card">
+          <small>Prev. Interest Received</small>
+          <h2 id="histInterestReceived">₹0</h2>
+        </div>
+        <div class="card warn-card">
+          <small>Hist. Outstanding Loans</small>
+          <h2 id="histOutstanding">₹0</h2>
+        </div>
+        <div class="card highlight">
+          <small>Historical Cash Balance</small>
+          <h2 id="histCashBalance">₹0</h2>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Add Previous Years' Records</h2>
+      <div class="notice warn">
+        <strong>Avoid double counting:</strong> Enter individual records in the tabs below whenever possible. Use "Lump-Sum Opening Adjustment" <em>only</em> for older totals that are not entered as individual records.
+      </div>
+
+      <div class="subtabs">
+        <button class="subtab-btn active" type="button" data-subtab="prev-contrib" onclick="switchSubtab('prev-contrib')">1. Previous Contributions</button>
+        <button class="subtab-btn" type="button" data-subtab="prev-loan" onclick="switchSubtab('prev-loan')">2. Previous Loans</button>
+        <button class="subtab-btn" type="button" data-subtab="prev-repay" onclick="switchSubtab('prev-repay')">3. Previous Repayments</button>
+        <button class="subtab-btn" type="button" data-subtab="prev-lump" onclick="switchSubtab('prev-lump')">4. Lump-Sum Opening Adjustment</button>
+      </div>
+
+      <!-- 1. Previous Contributions -->
+      <div id="subtab-prev-contrib" class="subpanel active">
+        <div class="form-grid">
+          <div class="field">
+            <label for="prevConMember">Member Name</label>
+            <select id="prevConMember"></select>
+          </div>
+          <div class="field">
+            <label for="prevConAmount">Amount Contributed (₹)</label>
+            <input id="prevConAmount" type="number" min="1" value="1000">
+          </div>
+          <div class="field">
+            <label for="prevConMonth">Month</label>
+            <select id="prevConMonth"></select>
+          </div>
+          <div class="field">
+            <label for="prevConYear">Year</label>
+            <input id="prevConYear" type="number" min="2000" max="2100">
+          </div>
+          <div class="field">
+            <label for="prevConDate">Date</label>
+            <input id="prevConDate" type="date">
+          </div>
+          <div class="field">
+            <button type="button" onclick="addContribution(true)">Add Previous Contribution</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Previous Loans -->
+      <div id="subtab-prev-loan" class="subpanel">
+        <div class="form-grid">
+          <div class="field">
+            <label for="prevLoanMember">Member Name</label>
+            <select id="prevLoanMember"></select>
+          </div>
+          <div class="field">
+            <label for="prevLoanAmount">Original Loan Amount (₹)</label>
+            <input id="prevLoanAmount" type="number" min="1" placeholder="e.g. 20000" oninput="syncPrevLoanOutstanding()">
+          </div>
+          <div class="field">
+            <label for="prevLoanDate">Loan Date</label>
+            <input id="prevLoanDate" type="date">
+          </div>
+          <div class="field">
+            <label for="prevLoanRate">Interest Rate (% / month)</label>
+            <input id="prevLoanRate" type="number" min="0" step="0.1" value="2">
+          </div>
+          <div class="field">
+            <label for="prevLoanOutstanding">Outstanding Principal Today (₹)</label>
+            <input id="prevLoanOutstanding" type="number" min="0" placeholder="Leave equal to loan if unpaid">
+          </div>
+          <div class="field">
+            <button type="button" onclick="addLoan(true)">Add Previous Loan</button>
+          </div>
+        </div>
+        <p class="section-desc" style="margin-top:8px;">If part of this old loan was already repaid before today, enter the remaining <strong>Outstanding Principal Today</strong>. The already-repaid principal (Loan − Outstanding) is automatically credited once without double counting.</p>
+      </div>
+
+      <!-- 3. Previous Repayments -->
+      <div id="subtab-prev-repay" class="subpanel">
+        <div class="form-grid">
+          <div class="field">
+            <label for="prevRepayTarget">Member / Loan</label>
+            <select id="prevRepayTarget"></select>
+          </div>
+          <div class="field">
+            <label for="prevRepayDate">Repayment Date</label>
+            <input id="prevRepayDate" type="date">
+          </div>
+          <div class="field">
+            <label for="prevRepayPrincipal">Principal Repaid (₹)</label>
+            <input id="prevRepayPrincipal" type="number" min="0" value="0">
+          </div>
+          <div class="field">
+            <label for="prevRepayInterest">Interest Paid (₹)</label>
+            <input id="prevRepayInterest" type="number" min="0" value="0">
+          </div>
+          <div class="field">
+            <button type="button" onclick="addRepayment(true)">Add Previous Repayment</button>
+          </div>
+        </div>
+        <p class="section-desc" style="margin-top:8px;">Select a specific Previous Loan to reduce its balance, or choose a member's <em>"Earlier Settled Loan (History/Interest)"</em> if you only need to log past interest without duplicating principal.</p>
+      </div>
+
+      <!-- 4. Lump-Sum Opening Adjustment -->
+      <div id="subtab-prev-lump" class="subpanel">
+        <div class="form-grid">
+          <div class="field">
+            <label for="openContrib">Un-itemized Prev. Contributions (₹)</label>
+            <input id="openContrib" type="number" min="0" value="0">
+          </div>
+          <div class="field">
+            <label for="openLoansIssued">Un-itemized Prev. Loans Issued (₹)</label>
+            <input id="openLoansIssued" type="number" min="0" value="0">
+          </div>
+          <div class="field">
+            <label for="openPrincipalRepaid">Un-itemized Prev. Principal Repaid (₹)</label>
+            <input id="openPrincipalRepaid" type="number" min="0" value="0">
+          </div>
+          <div class="field">
+            <label for="openInterest">Un-itemized Prev. Interest Received (₹)</label>
+            <input id="openInterest" type="number" min="0" value="0">
+          </div>
+          <div class="field">
+            <button type="button" onclick="saveOpeningBalance()">Save Opening Adjustment</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Entered Historical Records</h2>
+      <p class="section-desc">All entries marked <span class="badge hist">Historical</span>. You can edit or delete any entry.</p>
+      <div class="tablewrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Type</th>
+              <th>Member</th>
+              <th>Month / Year</th>
+              <th class="num">Amount</th>
+              <th>Note</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="historicalTable"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <!-- TAB 4: LOANS & MEMBERS -->
+  <div id="tab-loans" class="tab-panel">
+    <section>
+      <h2>All Loans (Previous &amp; Current)</h2>
+      <p class="section-desc">Track every loan, repaid principal, remaining balance, and interest rate. Edit or delete if needed.</p>
+      <div class="tablewrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Record</th>
+              <th>Date</th>
+              <th>Member</th>
+              <th class="num">Loan</th>
+              <th class="num">Repaid</th>
+              <th class="num">Balance</th>
+              <th>Rate</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="loansTable"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <h2>16 Group Members</h2>
+      <p class="section-desc">Edit any member name below; changes save automatically.</p>
+      <div class="tablewrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Member Name</th>
+              <th class="num">Total Paid</th>
+              <th class="num">Outstanding Loan</th>
+            </tr>
+          </thead>
+          <tbody id="membersTable"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <!-- TAB 5: TRANSACTIONS & EXPORT -->
+  <div id="tab-transactions" class="tab-panel">
+    <section>
+      <h2>Transactions Ledger</h2>
+      <p class="section-desc">Filter by member, month, year, or record type. Edit or delete any entry directly.</p>
+
+      <div class="filter-bar">
+        <div class="field">
+          <label for="filterMember">Member</label>
+          <select id="filterMember" onchange="renderTransactions()"></select>
+        </div>
+        <div class="field">
+          <label for="filterMonth">Month</label>
+          <select id="filterMonth" onchange="renderTransactions()"></select>
+        </div>
+        <div class="field">
+          <label for="filterYear">Year</label>
+          <select id="filterYear" onchange="renderTransactions()"></select>
+        </div>
+        <div class="field">
+          <label for="filterOrigin">Record Type</label>
+          <select id="filterOrigin" onchange="renderTransactions()">
+            <option value="all">All (Current + Historical)</option>
+            <option value="current">Current Only</option>
+            <option value="historical">Historical Only</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="filterType">Transaction Type</label>
+          <select id="filterType" onchange="renderTransactions()">
+            <option value="all">All Types</option>
+            <option value="Contribution">Contribution</option>
+            <option value="Loan issued">Loan issued</option>
+            <option value="Principal repayment">Principal repayment</option>
+            <option value="Interest repayment">Interest repayment</option>
+          </select>
+        </div>
+        <div class="field">
+          <button type="button" class="outline-dark" onclick="clearFilters()">Clear Filters</button>
+        </div>
+      </div>
+
+      <div id="filteredSummary" class="notice info"></div>
+
+      <div class="tablewrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Record</th>
+              <th>Date</th>
+              <th>Month / Year</th>
+              <th>Type</th>
+              <th>Member</th>
+              <th class="num">Amount</th>
+              <th>Note</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="transactionsTable"></tbody>
+        </table>
+      </div>
+
+      <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:16px;">
+        <button type="button" class="secondary" onclick="exportCSV(true)">Export Filtered CSV</button>
+        <button type="button" class="secondary" onclick="exportCSV(false)">Export All CSV</button>
+        <button type="button" onclick="downloadBackup()">Download Full Backup (JSON)</button>
+        <button type="button" class="outline-dark" onclick="triggerRestore()">Restore Backup (JSON)</button>
+        <button type="button" class="danger" onclick="askResetData()">Reset All Data</button>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer>
+  <strong>Storage Notice:</strong> All data is saved locally in your browser's storage (no server, login, or encryption). Anyone using this device/browser can view or clear it. Download a JSON backup regularly to keep your group's records safe.
+</footer>
+
+<!-- EDIT / CONFIRM MODAL -->
+<div id="modalBackdrop" class="modal-backdrop" role="dialog" aria-modal="true">
+  <div class="modal">
+    <h3 id="modalTitle">Edit Entry</h3>
+    <div id="modalBody"></div>
+    <div id="modalActions" class="modal-actions"></div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+const KEY = "moneyPoolManagerV1";
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+let data = loadAndMigrateData();
+
+function uid(prefix) {
+  return prefix + "_" + Date.now() + "_" + Math.floor(Math.random() * 100000);
+}
+
+function parseMonthYear(monthStr, dateStr) {
+  let m = "";
+  let y = "";
+  if (monthStr) {
+    const parts = String(monthStr).trim().split(/\s+/);
+    for (const p of parts) {
+      const foundMonth = MONTHS.find(mn => p.toLowerCase().startsWith(mn.toLowerCase()));
+      if (foundMonth) m = foundMonth;
+      if (/^\d{4}$/.test(p)) y = p;
+    }
+  }
+  if ((!m || !y) && dateStr && /^\d{4}-\d{2}/.test(dateStr)) {
+    const [yr, mo] = dateStr.split("-");
+    if (!y) y = yr;
+    if (!m) m = MONTHS[Number(mo) - 1] || "";
+  }
+  return { month: m, year: y };
+}
+
+function loadAndMigrateData() {
+  let raw = null;
+  try {
+    raw = JSON.parse(localStorage.getItem(KEY) || "null");
+  } catch (e) {
+    raw = null;
+  }
+  if (!raw || typeof raw !== "object") {
+    raw = {
+      members: Array.from({ length: 16 }, (_, i) => ({ id: i + 1, name: "Member " + (i + 1) })),
+      contributions: [],
+      loans: [],
+      transactions: [],
+      openingBalance: { contributions: 0, loansIssued: 0, principalRepaid: 0, interestReceived: 0 }
+    };
+  }
+  if (!Array.isArray(raw.members) || raw.members.length === 0) {
+    raw.members = Array.from({ length: 16 }, (_, i) => ({ id: i + 1, name: "Member " + (i + 1) }));
+  }
+  if (!Array.isArray(raw.contributions)) raw.contributions = [];
+  if (!Array.isArray(raw.loans)) raw.loans = [];
+  if (!Array.isArray(raw.transactions)) raw.transactions = [];
+  if (!raw.openingBalance || typeof raw.openingBalance !== "object") {
+    raw.openingBalance = { contributions: 0, loansIssued: 0, principalRepaid: 0, interestReceived: 0 };
+  }
+  raw.openingBalance.contributions = Number(raw.openingBalance.contributions || 0);
+  raw.openingBalance.loansIssued = Number(raw.openingBalance.loansIssued || 0);
+  raw.openingBalance.principalRepaid = Number(raw.openingBalance.principalRepaid || 0);
+  raw.openingBalance.interestReceived = Number(raw.openingBalance.interestReceived || 0);
+
+  raw.contributions = raw.contributions.map((c, idx) => {
+    const parsed = parseMonthYear(c.month, c.date);
+    return {
+      id: c.id || ("c_mig_" + idx + "_" + (c.date || "")),
+      memberId: Number(c.memberId),
+      amount: Number(c.amount || 0),
+      month: parsed.month || c.month || "",
+      year: c.year ? String(c.year) : parsed.year,
+      date: c.date || new Date().toISOString().slice(0, 10),
+      isHistorical: Boolean(c.isHistorical)
+    };
+  });
+
+  raw.loans = raw.loans.map((l, idx) => ({
+    id: l.id || ("l_mig_" + idx),
+    memberId: Number(l.memberId),
+    amount: Number(l.amount || 0),
+    rate: Number(l.rate || 0),
+    repaid: Number(l.repaid || 0),
+    initialRepaid: Number(l.initialRepaid || 0),
+    date: l.date || new Date().toISOString().slice(0, 10),
+    isHistorical: Boolean(l.isHistorical),
+    note: l.note || ""
+  }));
+
+  raw.transactions = raw.transactions.map((t, idx) => {
+    const parsed = parseMonthYear(t.note, t.date);
+    return {
+      id: t.id || ("t_mig_" + idx),
+      refType: t.refType || "",
+      refId: t.refId || "",
+      loanId: t.loanId || "",
+      memberId: Number(t.memberId),
+      amount: Number(t.amount || 0),
+      type: t.type || "Contribution",
+      date: t.date || new Date().toISOString().slice(0, 10),
+      month: t.month || parsed.month,
+      year: t.year ? String(t.year) : parsed.year,
+      isHistorical: Boolean(t.isHistorical),
+      note: t.note || ""
+    };
+  });
+
+  return raw;
+}
+
+function save() {
+  try {
+    localStorage.setItem(KEY, JSON.stringify(data));
+  } catch (e) {
+    showToast("Could not save to browser storage.", true);
+  }
+  render();
+}
+
+function showToast(msg, isError) {
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.className = "toast " + (isError ? "error" : "success");
+  el.style.display = "block";
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(() => { el.style.display = "none"; }, 3200);
+}
+
+function escapeHTML(str) {
+  return String(str == null ? "" : str).replace(/[&<>'"]/g, m => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  }[m]));
+}
+
+function money(n) {
+  return "₹" + Number(n || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 });
+}
+
+function memberName(id) {
+  const m = data.members.find(x => Number(x.id) === Number(id));
+  return m ? m.name : "Unknown";
+}
+
+function loanBalance(l) {
+  return Math.max(0, Number(l.amount) - Number(l.repaid));
+}
+
+function computeTotals() {
+  const ob = data.openingBalance;
+  const prevContrib = data.contributions.filter(c => c.isHistorical).reduce((s, c) => s + c.amount, 0) + ob.contributions;
+  const currContrib = data.contributions.filter(c => !c.isHistorical).reduce((s, c) => s + c.amount, 0);
+  const totalContrib = prevContrib + currContrib;
+
+  const prevLoansIssued = data.loans.filter(l => l.isHistorical).reduce((s, l) => s + l.amount, 0) + ob.loansIssued;
+  const currLoansIssued = data.loans.filter(l => !l.isHistorical).reduce((s, l) => s + l.amount, 0);
+  const totalLoansIssued = prevLoansIssued + currLoansIssued;
+
+  const initialLoanRepaid = data.loans.reduce((s, l) => s + Number(l.initialRepaid || 0), 0);
+  const prevPrincipalTx = data.transactions.filter(t => t.type === "Principal repayment" && t.isHistorical).reduce((s, t) => s + t.amount, 0);
+  const currPrincipalTx = data.transactions.filter(t => t.type === "Principal repayment" && !t.isHistorical).reduce((s, t) => s + t.amount, 0);
+  const prevPrincipalRepaid = initialLoanRepaid + prevPrincipalTx + ob.principalRepaid;
+  const currPrincipalRepaid = currPrincipalTx;
+  const totalPrincipalRepaid = prevPrincipalRepaid + currPrincipalRepaid;
+
+  const prevInterest = data.transactions.filter(t => t.type === "Interest repayment" && t.isHistorical).reduce((s, t) => s + t.amount, 0) + ob.interestReceived;
+  const currInterest = data.transactions.filter(t => t.type === "Interest repayment" && !t.isHistorical).reduce((s, t) => s + t.amount, 0);
+  const totalInterest = prevInterest + currInterest;
+
+  const histLoanOutstanding = data.loans.filter(l => l.isHistorical).reduce((s, l) => s + loanBalance(l), 0) + Math.max(0, ob.loansIssued - ob.principalRepaid);
+  const totalOutstanding = data.loans.reduce((s, l) => s + loanBalance(l), 0) + Math.max(0, ob.loansIssued - ob.principalRepaid);
+  const activeLoansCount = data.loans.filter(l => loanBalance(l) > 0).length;
+
+  const histCashBalance = prevContrib + prevPrincipalRepaid + prevInterest - prevLoansIssued;
+  const availableCash = totalContrib + totalPrincipalRepaid + totalInterest - totalLoansIssued;
+
+  return {
+    prevContrib, currContrib, totalContrib,
+    prevLoansIssued, currLoansIssued, totalLoansIssued,
+    prevPrincipalRepaid, currPrincipalRepaid, totalPrincipalRepaid,
+    prevInterest, currInterest, totalInterest,
+    histLoanOutstanding, totalOutstanding, activeLoansCount,
+    histCashBalance, availableCash
+  };
+}
+
+function initFormDefaults() {
+  const today = new Date();
+  const iso = today.toISOString().slice(0, 10);
+  const curMonth = MONTHS[today.getMonth()];
+  const curYear = today.getFullYear();
+
+  const monthOptions = MONTHS.map(m => `<option value="${m}">${m}</option>`).join("");
+  document.getElementById("conMonth").innerHTML = monthOptions;
+  document.getElementById("conMonth").value = curMonth;
+  document.getElementById("conYear").value = curYear;
+  document.getElementById("conDate").value = iso;
+  document.getElementById("loanDate").value = iso;
+  document.getElementById("repayDate").value = iso;
+
+  document.getElementById("prevConMonth").innerHTML = monthOptions;
+  document.getElementById("prevConMonth").value = "Jan";
+  document.getElementById("prevConYear").value = curYear - 1;
+  document.getElementById("prevConDate").value = (curYear - 1) + "-01-05";
+  document.getElementById("prevLoanDate").value = (curYear - 1) + "-06-01";
+  document.getElementById("prevRepayDate").value = (curYear - 1) + "-12-01";
+
+  document.getElementById("filterMonth").innerHTML =
+    `<option value="all">All Months</option>` + monthOptions;
+}
+
+function render() {
+  const t = computeTotals();
+
+  document.getElementById("dashTotalContrib").textContent = money(t.totalContrib);
+  document.getElementById("dashContribSplit").textContent = `Prev: ${money(t.prevContrib)} • Curr: ${money(t.currContrib)}`;
+  document.getElementById("dashTotalLoans").textContent = money(t.totalLoansIssued);
+  document.getElementById("dashLoansSplit").textContent = `Prev: ${money(t.prevLoansIssued)} • Curr: ${money(t.currLoansIssued)}`;
+  document.getElementById("dashTotalPrincipalRepaid").textContent = money(t.totalPrincipalRepaid);
+  document.getElementById("dashRepaidSplit").textContent = `Prev: ${money(t.prevPrincipalRepaid)} • Curr: ${money(t.currPrincipalRepaid)}`;
+  document.getElementById("dashTotalInterest").textContent = money(t.totalInterest);
+  document.getElementById("dashInterestSplit").textContent = `Prev: ${money(t.prevInterest)} • Curr: ${money(t.currInterest)}`;
+  document.getElementById("dashOutstanding").textContent = money(t.totalOutstanding);
+  document.getElementById("dashActiveLoansCount").textContent = `${t.activeLoansCount} open loan(s)`;
+  document.getElementById("dashAvailable").textContent = money(t.availableCash);
+
+  document.getElementById("histContribTotal").textContent = money(t.prevContrib);
+  document.getElementById("histLoansIssued").textContent = money(t.prevLoansIssued);
+  document.getElementById("histPrincipalRepaid").textContent = money(t.prevPrincipalRepaid);
+  document.getElementById("histInterestReceived").textContent = money(t.prevInterest);
+  document.getElementById("histOutstanding").textContent = money(t.histLoanOutstanding);
+  document.getElementById("histCashBalance").textContent = money(t.histCashBalance);
+
+  document.getElementById("openContrib").value = data.openingBalance.contributions;
+  document.getElementById("openLoansIssued").value = data.openingBalance.loansIssued;
+  document.getElementById("openPrincipalRepaid").value = data.openingBalance.principalRepaid;
+  document.getElementById("openInterest").value = data.openingBalance.interestReceived;
+
+  const memberOpts = data.members.map(m => `<option value="${m.id}">${escapeHTML(m.name)}</option>`).join("");
+  ["conMember", "loanMember", "prevConMember", "prevLoanMember"].forEach(id => {
+    const el = document.getElementById(id);
+    const prev = el.value;
+    el.innerHTML = memberOpts;
+    if (prev && data.members.some(m => String(m.id) === String(prev))) el.value = prev;
+  });
+
+  const fMem = document.getElementById("filterMember");
+  const prevFMem = fMem.value || "all";
+  fMem.innerHTML = `<option value="all">All Members</option>` + memberOpts;
+  fMem.value = prevFMem;
+
+  const years = new Set();
+  data.transactions.forEach(tx => { if (tx.year) years.add(String(tx.year)); else if (tx.date) years.add(tx.date.slice(0, 4)); });
+  const fYear = document.getElementById("filterYear");
+  const prevFYear = fYear.value || "all";
+  fYear.innerHTML = `<option value="all">All Years</option>` +
+    Array.from(years).sort().reverse().map(y => `<option value="${y}">${y}</option>`).join("");
+  if (prevFYear === "all" || years.has(prevFYear)) fYear.value = prevFYear;
+
+  const openLoans = data.loans.filter(l => loanBalance(l) > 0);
+  document.getElementById("repayLoan").innerHTML = openLoans.length
+    ? openLoans.map(l => `<option value="${l.id}">${escapeHTML(memberName(l.memberId))} (${l.isHistorical ? "Prev" : "Curr"}) — Bal ${money(loanBalance(l))}</option>`).join("")
+    : `<option value="">No open loans</option>`;
+
+  const prevOpenLoans = data.loans.filter(l => l.isHistorical && loanBalance(l) > 0);
+  const prevTargetOpts = [
+    ...prevOpenLoans.map(l => `<option value="loan:${l.id}">${escapeHTML(memberName(l.memberId))} — Prev Loan (${l.date}) Bal ${money(loanBalance(l))}</option>`),
+    ...data.members.map(m => `<option value="settled:${m.id}">${escapeHTML(m.name)} — Earlier Settled Loan (History/Interest)</option>`)
+  ];
+  document.getElementById("prevRepayTarget").innerHTML = prevTargetOpts.join("");
+
+  document.getElementById("memberSummaryTable").innerHTML = data.members.map(m => {
+    const prevC = data.contributions.filter(c => c.memberId == m.id && c.isHistorical).reduce((s, c) => s + c.amount, 0);
+    const currC = data.contributions.filter(c => c.memberId == m.id && !c.isHistorical).reduce((s, c) => s + c.amount, 0);
+    const totC = prevC + currC;
+    const mLoans = data.loans.filter(l => l.memberId == m.id);
+    const loansTaken = mLoans.reduce((s, l) => s + l.amount, 0);
+    const repaidP = mLoans.reduce((s, l) => s + l.repaid, 0);
+    const outP = mLoans.reduce((s, l) => s + loanBalance(l), 0);
+    const intPaid = data.transactions.filter(tx => tx.memberId == m.id && tx.type === "Interest repayment").reduce((s, tx) => s + tx.amount, 0);
+    return `<tr>
+      <td>${m.id}</td>
+      <td><strong>${escapeHTML(m.name)}</strong></td>
+      <td class="num">${money(prevC)}</td>
+      <td class="num">${money(currC)}</td>
+      <td class="num"><strong>${money(totC)}</strong></td>
+      <td class="num">${money(loansTaken)}</td>
+      <td class="num">${money(repaidP)}</td>
+      <td class="num">${money(outP)}</td>
+      <td class="num">${money(intPaid)}</td>
+    </tr>`;
+  }).join("");
+
+  document.getElementById("membersTable").innerHTML = data.members.map(m => {
+    const totC = data.contributions.filter(c => c.memberId == m.id).reduce((s, c) => s + c.amount, 0);
+    const outP = data.loans.filter(l => l.memberId == m.id).reduce((s, l) => s + loanBalance(l), 0);
+    return `<tr>
+      <td>${m.id}</td>
+      <td><input type="text" value="${escapeHTML(m.name)}" onchange="renameMember(${m.id}, this.value)" aria-label="Name for member ${m.id}"></td>
+      <td class="num">${money(totC)}</td>
+      <td class="num">${money(outP)}</td>
+    </tr>`;
+  }).join("");
+
+  document.getElementById("loansTable").innerHTML = data.loans.length
+    ? [...data.loans].reverse().map(l => {
+        const bal = loanBalance(l);
+        return `<tr>
+          <td><span class="badge ${l.isHistorical ? "hist" : "curr"}">${l.isHistorical ? "Historical" : "Current"}</span></td>
+          <td>${escapeHTML(l.date)}</td>
+          <td>${escapeHTML(memberName(l.memberId))}</td>
+          <td class="num">${money(l.amount)}</td>
+          <td class="num">${money(l.repaid)}</td>
+          <td class="num"><strong>${money(bal)}</strong></td>
+          <td>${l.rate}% / mo</td>
+          <td><span class="badge ${bal === 0 ? "paid" : "open"}">${bal === 0 ? "Closed" : "Open"}</span></td>
+          <td class="actions-cell">
+            <button type="button" class="btn-sm outline-dark" onclick="openEditLoan('${escapeHTML(l.id)}')">Edit</button>
+            <button type="button" class="btn-sm danger" onclick="confirmDeleteLoan('${escapeHTML(l.id)}')">Delete</button>
+          </td>
+        </tr>`;
+      }).join("")
+    : `<tr><td colspan="9" style="text-align:center;color:var(--muted);">No loans recorded yet.</td></tr>`;
+
+  const histTxs = data.transactions.filter(tx => tx.isHistorical).slice().reverse();
+  document.getElementById("historicalTable").innerHTML = histTxs.length
+    ? histTxs.map(tx => `<tr>
+        <td>${escapeHTML(tx.date)}</td>
+        <td>${escapeHTML(tx.type)}</td>
+        <td>${escapeHTML(memberName(tx.memberId))}</td>
+        <td>${escapeHTML((tx.month ? tx.month + " " : "") + (tx.year || ""))}</td>
+        <td class="num">${money(tx.amount)}</td>
+        <td>${escapeHTML(tx.note || "")}</td>
+        <td class="actions-cell">
+          <button type="button" class="btn-sm outline-dark" onclick="openEditTransaction('${escapeHTML(tx.id)}')">Edit</button>
+          <button type="button" class="btn-sm danger" onclick="confirmDeleteTransaction('${escapeHTML(tx.id)}')">Delete</button>
+        </td>
+      </tr>`).join("")
+    : `<tr><td colspan="7" style="text-align:center;color:var(--muted);">No historical entries added yet.</td></tr>`;
+
+  renderTransactions();
+}
+
+function getFilteredTransactions() {
+  const fMem = document.getElementById("filterMember").value;
+  const fMonth = document.getElementById("filterMonth").value;
+  const fYear = document.getElementById("filterYear").value;
+  const fOrigin = document.getElementById("filterOrigin").value;
+  const fType = document.getElementById("filterType").value;
+
+  return data.transactions.filter(tx => {
+    if (fMem !== "all" && String(tx.memberId) !== String(fMem)) return false;
+    const txMonth = tx.month || parseMonthYear("", tx.date).month;
+    const txYear = tx.year || (tx.date ? tx.date.slice(0, 4) : "");
+    if (fMonth !== "all" && txMonth !== fMonth) return false;
+    if (fYear !== "all" && txYear !== fYear) return false;
+    if (fOrigin === "current" && tx.isHistorical) return false;
+    if (fOrigin === "historical" && !tx.isHistorical) return false;
+    if (fType !== "all" && tx.type !== fType) return false;
+    return true;
+  });
+}
+
+function renderTransactions() {
+  const list = getFilteredTransactions().slice().reverse();
+  const sum = list.reduce((s, tx) => s + tx.amount, 0);
+  document.getElementById("filteredSummary").innerHTML =
+    `Showing <strong>${list.length}</strong> transaction(s) • Combined amount: <strong>${money(sum)}</strong>`;
+
+  document.getElementById("transactionsTable").innerHTML = list.length
+    ? list.map(tx => `<tr>
+        <td><span class="badge ${tx.isHistorical ? "hist" : "curr"}">${tx.isHistorical ? "Historical" : "Current"}</span></td>
+        <td>${escapeHTML(tx.date)}</td>
+        <td>${escapeHTML((tx.month ? tx.month + " " : "") + (tx.year || ""))}</td>
+        <td>${escapeHTML(tx.type)}</td>
+        <td>${escapeHTML(memberName(tx.memberId))}</td>
+        <td class="num"><strong>${money(tx.amount)}</strong></td>
+        <td>${escapeHTML(tx.note || "")}</td>
+        <td class="actions-cell">
+          <button type="button" class="btn-sm outline-dark" onclick="openEditTransaction('${escapeHTML(tx.id)}')">Edit</button>
+          <button type="button" class="btn-sm danger" onclick="confirmDeleteTransaction('${escapeHTML(tx.id)}')">Delete</button>
+        </td>
+      </tr>`).join("")
+    : `<tr><td colspan="8" style="text-align:center;color:var(--muted);">No matching transactions found.</td></tr>`;
+}
+
+function clearFilters() {
+  document.getElementById("filterMember").value = "all";
+  document.getElementById("filterMonth").value = "all";
+  document.getElementById("filterYear").value = "all";
+  document.getElementById("filterOrigin").value = "all";
+  document.getElementById("filterType").value = "all";
+  renderTransactions();
+}
+
+function switchTab(tabName) {
+  document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("active", b.dataset.tab === tabName));
+  document.querySelectorAll(".tab-panel").forEach(p => p.classList.toggle("active", p.id === "tab-" + tabName));
+}
+
+function switchSubtab(subName) {
+  document.querySelectorAll(".subtab-btn").forEach(b => b.classList.toggle("active", b.dataset.subtab === subName));
+  document.querySelectorAll(".subpanel").forEach(p => p.classList.toggle("active", p.id === "subtab-" + subName));
+}
+
+function renameMember(id, name) {
+  const m = data.members.find(x => Number(x.id) === Number(id));
+  if (m) {
+    m.name = name.trim() || ("Member " + id);
+    save();
+    showToast("Member name updated.");
+  }
+}
+
+function addContribution(isHistorical) {
+  const prefix = isHistorical ? "prevCon" : "con";
+  const memberId = Number(document.getElementById(prefix + "Member").value);
+  const amount = Number(document.getElementById(prefix + "Amount").value);
+  const month = document.getElementById(prefix + "Month").value;
+  const year = String(document.getElementById(prefix + "Year").value || "").trim();
+  const date = document.getElementById(prefix + "Date").value || new Date().toISOString().slice(0, 10);
+
+  if (amount <= 0 || !month || !year) {
+    return showToast("Enter a valid amount, month, and year.", true);
+  }
+  const cId = uid("c");
+  const note = `${month} ${year}`;
+  data.contributions.push({ id: cId, memberId, amount, month, year, date, isHistorical });
+  data.transactions.push({
+    id: uid("t"), refType: "contribution", refId: cId,
+    memberId, amount, type: "Contribution", date, month, year, isHistorical, note
+  });
+  save();
+  showToast((isHistorical ? "Previous" : "Current") + " contribution recorded.");
+}
+
+function syncPrevLoanOutstanding() {
+  const amt = document.getElementById("prevLoanAmount").value;
+  const outEl = document.getElementById("prevLoanOutstanding");
+  if (!outEl.dataset.touched) outEl.value = amt;
+}
+
+function addLoan(isHistorical) {
+  const prefix = isHistorical ? "prevLoan" : "loan";
+  const memberId = Number(document.getElementById(prefix + "Member").value);
+  const amount = Number(document.getElementById(prefix + "Amount").value);
+  const rate = Number(document.getElementById(prefix + "Rate").value);
+  const date = document.getElementById(prefix + "Date").value || new Date().toISOString().slice(0, 10);
+  const parsed = parseMonthYear("", date);
+
+  if (amount <= 0 || rate < 0) {
+    return showToast("Enter a valid loan amount and interest rate.", true);
+  }
+
+  let initialRepaid = 0;
+  let note = `${rate}% monthly interest`;
+  if (isHistorical) {
+    const outRaw = document.getElementById("prevLoanOutstanding").value;
+    const outstanding = outRaw === "" ? amount : Number(outRaw);
+    if (outstanding < 0 || outstanding > amount) {
+      return showToast("Outstanding principal must be between ₹0 and the loan amount.", true);
+    }
+    initialRepaid = amount - outstanding;
+    note = `${rate}% mo • Opening bal: ${money(outstanding)}`;
+  } else {
+    const totals = computeTotals();
+    if (amount > totals.availableCash) {
+      return showToast("Insufficient available cash balance (" + money(totals.availableCash) + ").", true);
+    }
+    const customNote = document.getElementById("loanNote").value.trim();
+    if (customNote) note = customNote + " (" + note + ")";
+  }
+
+  const loanId = uid("l");
+  data.loans.push({
+    id: loanId, memberId, amount, rate,
+    repaid: initialRepaid, initialRepaid,
+    date, isHistorical, note
+  });
+  data.transactions.push({
+    id: uid("t"), refType: "loan", refId: loanId, loanId,
+    memberId, amount, type: "Loan issued", date,
+    month: parsed.month, year: parsed.year, isHistorical, note
+  });
+  if (isHistorical) {
+    document.getElementById("prevLoanAmount").value = "";
+    document.getElementById("prevLoanOutstanding").value = "";
+    delete document.getElementById("prevLoanOutstanding").dataset.touched;
+  } else {
+    document.getElementById("loanAmount").value = "";
+    document.getElementById("loanNote").value = "";
+  }
+  save();
+  showToast((isHistorical ? "Previous" : "Current") + " loan recorded.");
+}
+
+function addRepayment(isHistorical) {
+  let loan = null;
+  let memberId = null;
+  let principal = 0;
+  let interest = 0;
+  let date = "";
+
+  if (isHistorical) {
+    const target = document.getElementById("prevRepayTarget").value;
+    if (!target) return showToast("Select a member or previous loan.", true);
+    if (target.startsWith("loan:")) {
+      const lId = target.slice(5);
+      loan = data.loans.find(l => String(l.id) === String(lId));
+      if (!loan) return showToast("Selected loan not found.", true);
+      memberId = loan.memberId;
+    } else {
+      memberId = Number(target.slice(8));
+    }
+    principal = Number(document.getElementById("prevRepayPrincipal").value || 0);
+    interest = Number(document.getElementById("prevRepayInterest").value || 0);
+    date = document.getElementById("prevRepayDate").value || new Date().toISOString().slice(0, 10);
+  } else {
+    const lId = document.getElementById("repayLoan").value;
+    loan = data.loans.find(l => String(l.id) === String(lId));
+    if (!loan) return showToast("Select an open loan.", true);
+    memberId = loan.memberId;
+    principal = Number(document.getElementById("repayPrincipal").value || 0);
+    interest = Number(document.getElementById("repayInterest").value || 0);
+    date = document.getElementById("repayDate").value || new Date().toISOString().slice(0, 10);
+  }
+
+  if (principal < 0 || interest < 0 || principal + interest <= 0) {
+    return showToast("Enter a valid principal or interest amount.", true);
+  }
+  if (loan && principal > loanBalance(loan)) {
+    return showToast("Principal repayment exceeds remaining loan balance (" + money(loanBalance(loan)) + ").", true);
+  }
+  if (!loan && principal > 0) {
+    return showToast("For an earlier settled loan without a loan record, enter Principal as ₹0 or add the loan in Previous Loans first.", true);
+  }
+
+  const parsed = parseMonthYear("", date);
+  if (loan && principal > 0) {
+    loan.repaid += principal;
+    data.transactions.push({
+      id: uid("t"), refType: "repayment", loanId: loan.id,
+      memberId, amount: principal, type: "Principal repayment",
+      date, month: parsed.month, year: parsed.year, isHistorical,
+      note: "Loan " + loan.date
+    });
+  }
+  if (interest > 0) {
+    data.transactions.push({
+      id: uid("t"), refType: "repayment", loanId: loan ? loan.id : "",
+      memberId, amount: interest, type: "Interest repayment",
+      date, month: parsed.month, year: parsed.year, isHistorical,
+      note: loan ? ("Loan " + loan.date) : "Earlier settled loan"
+    });
+  }
+
+  if (isHistorical) {
+    document.getElementById("prevRepayPrincipal").value = "0";
+    document.getElementById("prevRepayInterest").value = "0";
+  } else {
+    document.getElementById("repayPrincipal").value = "0";
+    document.getElementById("repayInterest").value = "0";
+  }
+  save();
+  showToast("Repayment recorded.");
+}
+
+function saveOpeningBalance() {
+  const c = Number(document.getElementById("openContrib").value || 0);
+  const l = Number(document.getElementById("openLoansIssued").value || 0);
+  const p = Number(document.getElementById("openPrincipalRepaid").value || 0);
+  const i = Number(document.getElementById("openInterest").value || 0);
+  if (c < 0 || l < 0 || p < 0 || i < 0) return showToast("Values cannot be negative.", true);
+  if (p > l) return showToast("Un-itemized principal repaid cannot exceed un-itemized loans issued.", true);
+  data.openingBalance = { contributions: c, loansIssued: l, principalRepaid: p, interestReceived: i };
+  save();
+  showToast("Opening balance adjustment saved.");
+}
+
+function openModal(title, bodyHTML, buttons) {
+  document.getElementById("modalTitle").textContent = title;
+  document.getElementById("modalBody").innerHTML = bodyHTML;
+  const actions = document.getElementById("modalActions");
+  actions.innerHTML = "";
+  buttons.forEach(b => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.textContent = b.label;
+    btn.className = b.className || "";
+    btn.onclick = b.onClick;
+    actions.appendChild(btn);
+  });
+  document.getElementById("modalBackdrop").classList.add("open");
+}
+
+function closeModal() {
+  document.getElementById("modalBackdrop").classList.remove("open");
+}
+
+function openEditTransaction(txId) {
+  const tx = data.transactions.find(x => String(x.id) === String(txId));
+  if (!tx) return;
+
+  if (tx.refType === "loan" || tx.type === "Loan issued") {
+    const loan = data.loans.find(l => String(l.id) === String(tx.refId || tx.loanId));
+    if (loan) return openEditLoan(loan.id);
+  }
+
+  const memberOpts = data.members.map(m =>
+    `<option value="${m.id}" ${Number(m.id) === Number(tx.memberId) ? "selected" : ""}>${escapeHTML(m.name)}</option>`
+  ).join("");
+  const monthOpts = MONTHS.map(m =>
+    `<option value="${m}" ${m === tx.month ? "selected" : ""}>${m}</option>`
+  ).join("");
+
+  const isContrib = tx.type === "Contribution";
+  openModal("Edit " + tx.type, `
+    <div class="field" style="margin-bottom:10px;">
+      <label>Member</label>
+      <select id="editTxMember">${memberOpts}</select>
+    </div>
+    <div class="field" style="margin-bottom:10px;">
+      <label>Amount (₹)</label>
+      <input id="editTxAmount" type="number" min="1" value="${tx.amount}">
+    </div>
+    <div class="field" style="margin-bottom:10px;">
+      <label>Date</label>
+      <input id="editTxDate" type="date" value="${escapeHTML(tx.date)}">
+    </div>
+    ${isContrib ? `
+      <div class="form-grid" style="margin-bottom:10px;">
+        <div class="field"><label>Month</label><select id="editTxMonth">${monthOpts}</select></div>
+        <div class="field"><label>Year</label><input id="editTxYear" type="number" value="${escapeHTML(tx.year || tx.date.slice(0,4))}"></div>
+      </div>
+    ` : ""}
+    <div class="field" style="margin-bottom:10px;">
+      <label>Record Type</label>
+      <select id="editTxHist">
+        <option value="false" ${!tx.isHistorical ? "selected" : ""}>Current</option>
+        <option value="true" ${tx.isHistorical ? "selected" : ""}>Historical (Previous Years)</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Note</label>
+      <input id="editTxNote" type="text" value="${escapeHTML(tx.note || "")}">
+    </div>
+  `, [
+    { label: "Cancel", className: "outline-dark", onClick: closeModal },
+    {
+      label: "Save Changes",
+      onClick: () => {
+        const newAmt = Number(document.getElementById("editTxAmount").value);
+        const newDate = document.getElementById("editTxDate").value;
+        const newMem = Number(document.getElementById("editTxMember").value);
+        const newHist = document.getElementById("editTxHist").value === "true";
+        const newNote = document.getElementById("editTxNote").value.trim();
+        if (newAmt <= 0 || !newDate) return showToast("Enter valid amount and date.", true);
+
+        if (tx.type === "Principal repayment" && tx.loanId) {
+          const loan = data.loans.find(l => String(l.id) === String(tx.loanId));
+          if (loan) {
+            const diff = newAmt - tx.amount;
+            if (loan.repaid + diff > loan.amount) {
+              return showToast("Updated principal exceeds loan amount.", true);
+            }
+            loan.repaid += diff;
+          }
+        }
+
+        if (isContrib) {
+          const newMonth = document.getElementById("editTxMonth").value;
+          const newYear = String(document.getElementById("editTxYear").value || "").trim();
+          tx.month = newMonth;
+          tx.year = newYear;
+          const contrib = data.contributions.find(c => String(c.id) === String(tx.refId));
+          if (contrib) {
+            contrib.memberId = newMem;
+            contrib.amount = newAmt;
+            contrib.date = newDate;
+            contrib.month = newMonth;
+            contrib.year = newYear;
+            contrib.isHistorical = newHist;
+          }
+        } else {
+          const parsed = parseMonthYear("", newDate);
+          tx.month = parsed.month;
+          tx.year = parsed.year;
+        }
+
+        tx.memberId = newMem;
+        tx.amount = newAmt;
+        tx.date = newDate;
+        tx.isHistorical = newHist;
+        tx.note = newNote;
+        closeModal();
+        save();
+        showToast("Entry updated.");
+      }
+    }
+  ]);
+}
+
+function confirmDeleteTransaction(txId) {
+  const tx = data.transactions.find(x => String(x.id) === String(txId));
+  if (!tx) return;
+  if (tx.refType === "loan" || tx.type === "Loan issued") {
+    const loan = data.loans.find(l => String(l.id) === String(tx.refId || tx.loanId));
+    if (loan) return confirmDeleteLoan(loan.id);
+  }
+  openModal("Delete Entry?", `
+    <p>Are you sure you want to delete this <strong>${escapeHTML(tx.type)}</strong> of <strong>${money(tx.amount)}</strong> for <strong>${escapeHTML(memberName(tx.memberId))}</strong> (${escapeHTML(tx.date)})?</p>
+  `, [
+    { label: "Cancel", className: "outline-dark", onClick: closeModal },
+    {
+      label: "Delete",
+      className: "danger",
+      onClick: () => {
+        if (tx.type === "Contribution" && tx.refId) {
+          data.contributions = data.contributions.filter(c => String(c.id) !== String(tx.refId));
+        } else if (tx.type === "Contribution") {
+          const idx = data.contributions.findIndex(c => c.memberId == tx.memberId && c.amount == tx.amount && c.date == tx.date);
+          if (idx > -1) data.contributions.splice(idx, 1);
+        }
+        if (tx.type === "Principal repayment" && tx.loanId) {
+          const loan = data.loans.find(l => String(l.id) === String(tx.loanId));
+          if (loan) loan.repaid = Math.max(0, loan.repaid - tx.amount);
+        }
+        data.transactions = data.transactions.filter(x => String(x.id) !== String(txId));
+        closeModal();
+        save();
+        showToast("Entry deleted.");
+      }
+    }
+  ]);
+}
+
+function openEditLoan(loanId) {
+  const loan = data.loans.find(l => String(l.id) === String(loanId));
+  if (!loan) return;
+  const memberOpts = data.members.map(m =>
+    `<option value="${m.id}" ${Number(m.id) === Number(loan.memberId) ? "selected" : ""}>${escapeHTML(m.name)}</option>`
+  ).join("");
+  openModal("Edit Loan", `
+    <div class="field" style="margin-bottom:10px;">
+      <label>Member</label>
+      <select id="editLoanMember">${memberOpts}</select>
+    </div>
+    <div class="form-grid" style="margin-bottom:10px;">
+      <div class="field"><label>Loan Amount (₹)</label><input id="editLoanAmount" type="number" min="1" value="${loan.amount}"></div>
+      <div class="field"><label>Interest Rate (% / mo)</label><input id="editLoanRate" type="number" min="0" step="0.1" value="${loan.rate}"></div>
+    </div>
+    <div class="form-grid" style="margin-bottom:10px;">
+      <div class="field"><label>Date</label><input id="editLoanDate" type="date" value="${escapeHTML(loan.date)}"></div>
+      <div class="field"><label>Initial Repaid (Opening) (₹)</label><input id="editLoanInitRepaid" type="number" min="0" value="${loan.initialRepaid || 0}"></div>
+    </div>
+    <div class="field" style="margin-bottom:10px;">
+      <label>Record Type</label>
+      <select id="editLoanHist">
+        <option value="false" ${!loan.isHistorical ? "selected" : ""}>Current</option>
+        <option value="true" ${loan.isHistorical ? "selected" : ""}>Historical (Previous Years)</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Note</label>
+      <input id="editLoanNote" type="text" value="${escapeHTML(loan.note || "")}">
+    </div>
+  `, [
+    { label: "Cancel", className: "outline-dark", onClick: closeModal },
+    {
+      label: "Save Loan",
+      onClick: () => {
+        const newAmt = Number(document.getElementById("editLoanAmount").value);
+        const newRate = Number(document.getElementById("editLoanRate").value);
+        const newDate = document.getElementById("editLoanDate").value;
+        const newMem = Number(document.getElementById("editLoanMember").value);
+        const newInit = Number(document.getElementById("editLoanInitRepaid").value || 0);
+        const newHist = document.getElementById("editLoanHist").value === "true";
+        const newNote = document.getElementById("editLoanNote").value.trim();
+
+        const txRepaid = loan.repaid - (loan.initialRepaid || 0);
+        if (newAmt <= 0 || newRate < 0 || !newDate) return showToast("Enter valid loan details.", true);
+        if (newInit < 0 || newInit + txRepaid > newAmt) return showToast("Total repaid cannot exceed loan amount.", true);
+
+        loan.memberId = newMem;
+        loan.amount = newAmt;
+        loan.rate = newRate;
+        loan.date = newDate;
+        loan.initialRepaid = newInit;
+        loan.repaid = newInit + txRepaid;
+        loan.isHistorical = newHist;
+        loan.note = newNote;
+
+        const parsed = parseMonthYear("", newDate);
+        const tx = data.transactions.find(t => (t.refId === loan.id || t.loanId === loan.id) && t.type === "Loan issued");
+        if (tx) {
+          tx.memberId = newMem;
+          tx.amount = newAmt;
+          tx.date = newDate;
+          tx.month = parsed.month;
+          tx.year = parsed.year;
+          tx.isHistorical = newHist;
+          tx.note = newNote;
+        }
+        closeModal();
+        save();
+        showToast("Loan updated.");
+      }
+    }
+  ]);
+}
+
+function confirmDeleteLoan(loanId) {
+  const loan = data.loans.find(l => String(l.id) === String(loanId));
+  if (!loan) return;
+  openModal("Delete Loan?", `
+    <p>Delete the loan of <strong>${money(loan.amount)}</strong> for <strong>${escapeHTML(memberName(loan.memberId))}</strong> (${escapeHTML(loan.date)})? Any linked repayment transactions will also be removed.</p>
+  `, [
+    { label: "Cancel", className: "outline-dark", onClick: closeModal },
+    {
+      label: "Delete Loan",
+      className: "danger",
+      onClick: () => {
+        data.loans = data.loans.filter(l => String(l.id) !== String(loanId));
+        data.transactions = data.transactions.filter(t => String(t.loanId) !== String(loanId) && String(t.refId) !== String(loanId));
+        closeModal();
+        save();
+        showToast("Loan deleted.");
+      }
+    }
+  ]);
+}
+
+function exportCSV(filteredOnly) {
+  const list = filteredOnly ? getFilteredTransactions() : data.transactions;
+  const rows = [["Record Type", "Date", "Month", "Year", "Type", "Member", "Amount (INR)", "Note"]];
+  list.forEach(tx => {
+    const m = tx.month || parseMonthYear("", tx.date).month;
+    const y = tx.year || (tx.date ? tx.date.slice(0, 4) : "");
+    rows.push([
+      tx.isHistorical ? "Historical" : "Current",
+      tx.date,
+      m,
+      y,
+      tx.type,
+      memberName(tx.memberId),
+      tx.amount,
+      tx.note || ""
+    ]);
+  });
+  const csv = rows.map(r => r.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(",")).join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = filteredOnly ? "kanasawadi-filtered-transactions.csv" : "kanasawadi-all-transactions.csv";
+  a.click();
+  URL.revokeObjectURL(a.href);
+  showToast("CSV exported.");
+}
+
+function downloadBackup() {
+  const payload = {
+    app: "KanasawadiChitFund",
+    version: 2,
+    exportedAt: new Date().toISOString(),
+    data
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "kanasawadi-chit-fund-backup-" + new Date().toISOString().slice(0, 10) + ".json";
+  a.click();
+  URL.revokeObjectURL(a.href);
+  showToast("Backup downloaded.");
+}
+
+function triggerRestore() {
+  const inp = document.getElementById("restoreFileInput");
+  inp.value = "";
+  inp.click();
+}
+
+function handleRestoreFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const parsed = JSON.parse(reader.result);
+      const candidate = parsed && parsed.data ? parsed.data : parsed;
+      if (!candidate || !Array.isArray(candidate.members) || !Array.isArray(candidate.contributions) || !Array.isArray(candidate.loans) || !Array.isArray(candidate.transactions)) {
+        return showToast("Invalid backup file format.", true);
+      }
+      openModal("Restore Backup?", `
+        <p>This backup contains <strong>${candidate.contributions.length}</strong> contributions, <strong>${candidate.loans.length}</strong> loans, and <strong>${candidate.transactions.length}</strong> transactions.</p>
+        <p>Restoring will replace the data currently saved in this browser.</p>
+      `, [
+        { label: "Cancel", className: "outline-dark", onClick: closeModal },
+        {
+          label: "Restore Data",
+          onClick: () => {
+            localStorage.setItem(KEY, JSON.stringify(candidate));
+            data = loadAndMigrateData();
+            closeModal();
+            render();
+            showToast("Backup restored successfully.");
+          }
+        }
+      ]);
+    } catch (err) {
+      showToast("Could not read JSON backup file.", true);
+    }
+  };
+  reader.readAsText(file);
+}
+
+function askResetData() {
+  openModal("Reset All Data?", `
+    <p>This will permanently erase all saved members, contributions, loans, and historical records from this browser. Download a JSON backup first if you want to keep a copy.</p>
+  `, [
+    { label: "Cancel", className: "outline-dark", onClick: closeModal },
+    {
+      label: "Erase Everything",
+      className: "danger",
+      onClick: () => {
+        localStorage.removeItem(KEY);
+        data = loadAndMigrateData();
+        closeModal();
+        render();
+        showToast("All data reset.");
+      }
+    }
+  ]);
+}
+
+document.getElementById("prevLoanOutstanding").addEventListener("input", function () {
+  this.dataset.touched = "1";
+});
+
+initFormDefaults();
+render();
+</script>
+</body>
+</html>
