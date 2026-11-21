@@ -1,0 +1,216 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Money Pool Manager</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f4f6fb;color:#172033}
+header{background:#14243b;color:white;padding:22px}
+header h1{margin:0;font-size:24px}
+header p{margin:8px 0 0;color:#cbd5e1}
+main{max-width:1100px;margin:auto;padding:20px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px}
+.card{background:white;border-radius:14px;padding:18px;box-shadow:0 2px 8px #0001}
+.card small{color:#64748b}
+.card h2{margin:12px 0 0;font-size:24px}
+section{background:white;border-radius:14px;padding:18px;margin-top:20px;box-shadow:0 2px 8px #0001}
+input,select,button{padding:11px;border-radius:8px;border:1px solid #cbd5e1;margin:5px 3px;font-size:14px}
+button{background:#1d4ed8;color:white;border:0;cursor:pointer}
+button:hover{opacity:.88}
+.secondary{background:#64748b}
+.danger{background:#dc2626}
+table{width:100%;border-collapse:collapse;margin-top:12px}
+th,td{text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;font-size:14px}
+th{background:#f8fafc}
+.tablewrap{overflow-x:auto}
+footer{color:#64748b;font-size:12px;padding:20px;text-align:center}
+@media(max-width:600px){main{padding:12px}section{padding:12px}header{padding:18px}}
+</style>
+</head>
+<body>
+<header>
+<h1>Money Pool Manager</h1>
+<p>16 Member Group • Contribution & Loan Tracker</p>
+</header>
+<main>
+<div class="cards">
+<div class="card"><small>Total Members</small><h2 id="membersCount">16</h2></div>
+<div class="card"><small>Total Contributions</small><h2 id="collected">₹0</h2></div>
+<div class="card"><small>Outstanding Loans</small><h2 id="outstanding">₹0</h2></div>
+<div class="card"><small>Cash Available</small><h2 id="available">₹0</h2></div>
+<div class="card"><small>Interest Received</small><h2 id="interestTotal">₹0</h2></div>
+</div>
+
+<section>
+<h2>Members</h2>
+<div class="tablewrap">
+<table>
+<thead><tr><th>#</th><th>Member name</th><th>Paid</th></tr></thead>
+<tbody id="membersTable"></tbody>
+</table>
+</div>
+</section>
+
+<section>
+<h2>Record Contribution</h2>
+<select id="conMember"></select>
+<input id="conAmount" type="number" placeholder="Amount ₹" value="1000">
+<input id="conMonth" placeholder="Month (e.g. Nov 2026)">
+<button onclick="addContribution()">Record contribution</button>
+</section>
+
+<section>
+<h2>Record Loan</h2>
+<select id="loanMember"></select>
+<input id="loanAmount" type="number" placeholder="Loan amount ₹">
+<input id="loanRate" type="number" placeholder="Monthly interest %" value="2">
+<input id="loanDate" type="date">
+<button onclick="addLoan()">Record loan</button>
+<p><small>Interest is tracked as a monthly percentage. Confirm your group's interest rules before using actual records.</small></p>
+</section>
+
+<section>
+<h2>Record Repayment</h2>
+<select id="repayLoan"></select>
+<input id="repayPrincipal" type="number" placeholder="Principal repaid ₹" value="0">
+<input id="repayInterest" type="number" placeholder="Interest paid ₹" value="0">
+<button onclick="addRepayment()">Record repayment</button>
+</section>
+
+<section>
+<h2>Loans</h2>
+<div class="tablewrap">
+<table>
+<thead><tr><th>Member</th><th>Loan</th><th>Repaid principal</th><th>Balance</th><th>Rate</th></tr></thead>
+<tbody id="loansTable"></tbody>
+</table>
+</div>
+</section>
+
+<section>
+<h2>Transactions</h2>
+<div class="tablewrap">
+<table>
+<thead><tr><th>Date</th><th>Type</th><th>Member</th><th>Amount</th><th>Note</th></tr></thead>
+<tbody id="transactionsTable"></tbody>
+</table>
+</div>
+<button class="secondary" onclick="exportCSV()">Export transactions CSV</button>
+<button class="danger" onclick="resetData()">Reset all data</button>
+</section>
+</main>
+<footer>
+Prototype: data is saved only in this browser. Export backups regularly.
+</footer>
+
+<script>
+const KEY="moneyPoolManagerV1";
+let data=JSON.parse(localStorage.getItem(KEY)||"null");
+if(!data){
+ data={
+  members:Array.from({length:16},(_,i)=>({id:i+1,name:"Member "+(i+1)})),
+  contributions:[],
+  loans:[],
+  transactions:[]
+ };
+}
+function save(){localStorage.setItem(KEY,JSON.stringify(data));render();}
+function money(n){return "₹"+Number(n||0).toLocaleString("en-IN",{maximumFractionDigits:2});}
+function memberName(id){return data.members.find(m=>m.id==id)?.name||"Unknown";}
+function contributionTotal(){return data.contributions.reduce((s,c)=>s+c.amount,0);}
+function interestTotal(){return data.transactions.filter(t=>t.type==="Interest repayment").reduce((s,t)=>s+t.amount,0);}
+function loanBalance(l){return l.amount-l.repaid;}
+function totalOutstanding(){return data.loans.reduce((s,l)=>s+loanBalance(l),0);}
+function available(){return contributionTotal()+data.transactions.filter(t=>t.type==="Principal repayment").reduce((s,t)=>s+t.amount,0)-data.loans.reduce((s,l)=>s+l.amount,0);}
+function render(){
+ document.getElementById("membersCount").textContent=data.members.length;
+ document.getElementById("collected").textContent=money(contributionTotal());
+ document.getElementById("outstanding").textContent=money(totalOutstanding());
+ document.getElementById("available").textContent=money(available());
+ document.getElementById("interestTotal").textContent=money(interestTotal());
+
+ const memberOptions=data.members.map(m=>`<option value="${m.id}">${escapeHTML(m.name)}</option>`).join("");
+ document.getElementById("conMember").innerHTML=memberOptions;
+ document.getElementById("loanMember").innerHTML=memberOptions;
+
+ document.getElementById("membersTable").innerHTML=data.members.map(m=>{
+  let paid=data.contributions.filter(c=>c.memberId==m.id).reduce((s,c)=>s+c.amount,0);
+  return `<tr><td>${m.id}</td><td><input value="${escapeHTML(m.name)}" onchange="renameMember(${m.id},this.value)"></td><td>${money(paid)}</td></tr>`;
+ }).join("");
+
+ document.getElementById("loansTable").innerHTML=data.loans.map(l=>
+ `<tr><td>${escapeHTML(memberName(l.memberId))}</td><td>${money(l.amount)}</td><td>${money(l.repaid)}</td><td>${money(loanBalance(l))}</td><td>${l.rate}% / month</td></tr>`
+ ).join("");
+
+ document.getElementById("repayLoan").innerHTML=data.loans.filter(l=>loanBalance(l)>0).map(l=>
+ `<option value="${l.id}">${escapeHTML(memberName(l.memberId))} — Balance ${money(loanBalance(l))}</option>`
+ ).join("");
+
+ document.getElementById("transactionsTable").innerHTML=[...data.transactions].reverse().map(t=>
+ `<tr><td>${escapeHTML(t.date)}</td><td>${escapeHTML(t.type)}</td><td>${escapeHTML(memberName(t.memberId))}</td><td>${money(t.amount)}</td><td>${escapeHTML(t.note||"")}</td></tr>`
+ ).join("");
+}
+function escapeHTML(str){
+ return String(str).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+}
+function renameMember(id,name){
+ let m=data.members.find(x=>x.id==id);
+ if(m){m.name=name.trim()||("Member "+id);save();}
+}
+function addContribution(){
+ let memberId=Number(document.getElementById("conMember").value);
+ let amount=Number(document.getElementById("conAmount").value);
+ let month=document.getElementById("conMonth").value.trim();
+ if(amount<=0||!month)return alert("Enter amount and month.");
+ data.contributions.push({memberId,amount,month,date:new Date().toISOString().slice(0,10)});
+ data.transactions.push({memberId,amount,type:"Contribution",date:new Date().toISOString().slice(0,10),note:month});
+ save();
+}
+function addLoan(){
+ let memberId=Number(document.getElementById("loanMember").value);
+ let amount=Number(document.getElementById("loanAmount").value);
+ let rate=Number(document.getElementById("loanRate").value);
+ let date=document.getElementById("loanDate").value||new Date().toISOString().slice(0,10);
+ if(amount<=0||rate<0)return alert("Enter a valid loan amount and interest rate.");
+ if(amount>available())return alert("Insufficient available balance.");
+ let loan={id:Date.now(),memberId,amount,rate,repaid:0,date};
+ data.loans.push(loan);
+ data.transactions.push({memberId,amount,type:"Loan issued",date,note:rate+"% monthly interest"});
+ save();
+}
+function addRepayment(){
+ let loanId=Number(document.getElementById("repayLoan").value);
+ let principal=Number(document.getElementById("repayPrincipal").value||0);
+ let interest=Number(document.getElementById("repayInterest").value||0);
+ let loan=data.loans.find(l=>l.id===loanId);
+ if(!loan)return alert("Select a loan.");
+ if(principal<0||interest<0||principal+interest<=0)return alert("Enter a valid repayment.");
+ if(principal>loanBalance(loan))return alert("Principal repayment exceeds loan balance.");
+ loan.repaid+=principal;
+ let date=new Date().toISOString().slice(0,10);
+ if(principal>0)data.transactions.push({memberId:loan.memberId,amount:principal,type:"Principal repayment",date,note:"Loan #"+loan.id});
+ if(interest>0)data.transactions.push({memberId:loan.memberId,amount:interest,type:"Interest repayment",date,note:"Loan #"+loan.id});
+ save();
+}
+function exportCSV(){
+ let rows=[["Date","Type","Member","Amount","Note"]];
+ data.transactions.forEach(t=>rows.push([t.date,t.type,memberName(t.memberId),t.amount,t.note||""]));
+ let csv=rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(",")).join("\n");
+ let blob=new Blob([csv],{type:"text/csv"});
+ let a=document.createElement("a");
+ a.href=URL.createObjectURL(blob);a.download="money-pool-transactions.csv";a.click();
+ URL.revokeObjectURL(a.href);
+}
+function resetData(){
+ if(confirm("Delete all saved data from this browser? This cannot be undone.")){
+  localStorage.removeItem(KEY);
+  location.reload();
+ }
+}
+render();
+</script>
+</body>
+</html>
