@@ -516,7 +516,7 @@
         </div>
         <div class="field">
           <label for="regYear">Year</label>
-          <input id="regYear" type="number" min="2000" max="2100" onchange="renderRegister()">
+          <input id="regYear" type="number" min="2000" max="2100" oninput="renderRegister()" onchange="renderRegister()">
         </div>
         <div class="field admin-only">
           <label for="regBulkAmount">Monthly Contrib (₹)</label>
@@ -1052,7 +1052,7 @@ const DEFAULT_MEMBER_NAMES = [
   "Ravishankar - 1",
   "Maruti",
   "Varun Kumar",
-  "Chandhan C",
+  "Chandan C",
   "Srinivas S",
   "Krishna",
   "Ravishankar - 2",
@@ -1163,7 +1163,7 @@ function loadAndMigrateData() {
   }
   raw.members = raw.members.map((m, i) => {
     const defName = DEFAULT_MEMBER_NAMES[i] || ("Member " + (i + 1));
-    const isGeneric = !m.name || /^Member \d+$/.test(String(m.name).trim()) || (i === 14 && m.name === "Shivakumar");
+    const isGeneric = !m.name || /^Member \d+$/.test(String(m.name).trim()) || (i === 14 && m.name === "Shivakumar") || (i === 9 && m.name === "Chethan C");
     return { id: m.id || (i + 1), name: isGeneric ? defName : m.name, settled: Boolean(m.settled), settledDate: m.settledDate || "", settlementAmount: Number(m.settlementAmount || 0), settlementNote: m.settlementNote || "" };
   });
   if (!Array.isArray(raw.contributions)) raw.contributions = [];
@@ -1558,7 +1558,7 @@ function renderRegister() {
       .filter(l => {
         if (Number(l.memberId) !== Number(m.id)) return false;
         const p = parseMonthYear("", l.date);
-        return monthIndex(p.month, p.year) < selIdx;
+        return monthIndex(p.month, p.year) <= selIdx;
       });
     const loansBeforeAmt = loansBefore.reduce((s, l) => s + Number(l.amount || 0) - Number(l.initialRepaid || 0), 0);
     const prinRepaidBefore = data.transactions
@@ -1627,9 +1627,27 @@ function renderRegister() {
 
   document.getElementById("registerTable").innerHTML = rows + totalRow;
 
-  const totals = computeTotals();
-  const prevFundBalance = totals.totalContrib + totals.totalInterest - totMonthContrib - totMonthInt;
-  const gross = prevFundBalance + totMonthContrib + totMonthInt;
+  const prevContribsBefore = data.contributions
+    .filter(c => monthIndex(c.month, String(c.year)) < selIdx)
+    .reduce((s, c) => s + Number(c.amount || 0), 0) + Number(data.openingBalance.contributions || 0);
+
+  const prevIntBefore = data.transactions
+    .filter(tx => tx.type === "Interest repayment" && monthIndex(getTxMonthYear(tx).m, String(getTxMonthYear(tx).y)) < selIdx)
+    .reduce((s, tx) => s + Number(tx.amount || 0), 0) + Number(data.openingBalance.interestReceived || 0);
+
+  const monthIntCollected = data.transactions
+    .filter(tx => tx.type === "Interest repayment" && getTxMonthYear(tx).m === mSel && String(getTxMonthYear(tx).y) === ySel)
+    .reduce((s, tx) => s + Number(tx.amount || 0), 0);
+
+  const prevExpensesBefore = Object.entries(data.registerNotes || {})
+    .filter(([k]) => {
+      const [km, ky] = k.split("_");
+      return monthIndex(km, ky) < selIdx;
+    })
+    .reduce((s, [, v]) => s + Number(v.expense || 0), 0);
+
+  const prevFundBalance = prevContribsBefore + prevIntBefore - prevExpensesBefore;
+  const gross = prevFundBalance + totMonthContrib + monthIntCollected;
 
   const noteObj = data.registerNotes[key] || { note: "", expense: 0 };
   const noteEl = document.getElementById("regSettlementNote");
@@ -1648,7 +1666,7 @@ function renderRegister() {
 
   document.getElementById("regPrevTotal").textContent = money(prevFundBalance);
   document.getElementById("regMonthContrib").textContent = money(totMonthContrib);
-  document.getElementById("regMonthInterest").textContent = money(totMonthInt);
+  document.getElementById("regMonthInterest").textContent = money(monthIntCollected);
   document.getElementById("regGrossTotal").textContent = money(gross);
   document.getElementById("regNetBalance").textContent = money(gross - expense);
 }
